@@ -22,9 +22,10 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
       placeholder: 'Choose among the following...',
       maxLength: 3,
       maxLengthHtml: 'selected',
-      iconCheckmark: 'glyphicon glyphicon-ok'
+      iconCheckmark: 'glyphicon glyphicon-ok',
+      reloadEvents: []
     };
-
+    
     this.$get = function($window, $document, $rootScope, $tooltip) {
 
       var bodyEl = angular.element($window.document.body);
@@ -236,7 +237,7 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
         // Directive options
         var options = {scope: scope};
-        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'multiple', 'allNoneButtons', 'maxLength', 'maxLengthHtml'], function(key) {
+        angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'placeholder', 'multiple', 'allNoneButtons', 'maxLength', 'maxLengthHtml', 'reloadEvents'], function (key) {
           if(angular.isDefined(attr[key])) options[key] = attr[key];
         });
 
@@ -254,16 +255,27 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
         // Initialize select
         var select = $select(element, controller, options);
 
+        var reloadData = function () {
+            // console.warn('scope.$watch(%s)', watchedOptions, newValue, oldValue);
+            parsedOptions.valuesFn(scope, controller)
+                .then(function (values) {
+                    select.update(values);
+                    controller.$render();
+                });
+        };
+
+        // Initialize reloading
+        var reloadEvents = options.reloadEvents === undefined ? defaults.reloadEvents : options.reloadEvents.replace(' ', ',').split(',').filter(function (eventName) {
+            return eventName.trim() !== '';
+        });
+
+        reloadEvents.forEach(function (eventName) {
+            scope.$root.$on(eventName, reloadData);
+        });
+
         // Watch ngOptions values before filtering for changes
         var watchedOptions = parsedOptions.$match[7].replace(/\|.+/, '').trim();
-        scope.$watch(watchedOptions, function(newValue, oldValue) {
-          // console.warn('scope.$watch(%s)', watchedOptions, newValue, oldValue);
-          parsedOptions.valuesFn(scope, controller)
-          .then(function(values) {
-            select.update(values);
-            controller.$render();
-          });
-        }, true);
+        scope.$watch(watchedOptions, reloadData, true);
 
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {
@@ -271,6 +283,14 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
           select.$updateActiveIndex();
           controller.$render();
         }, true);
+        
+        var getPlaceHolder = function () {
+            try {
+                return scope.$eval(attr.placeholder) || attr.placeholder || defaults.placeholder;
+            } catch (e) {
+                return attr.placeholder || defaults.placeholder;
+            }
+        };
 
         // Model rendering in view
         controller.$render = function () {
@@ -290,7 +310,7 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
             index = select.$getIndex(controller.$modelValue);
             selected = angular.isDefined(index) ? select.$scope.$matches[index].label : false;
           }
-          element.html((selected ? selected : attr.placeholder || defaults.placeholder) + defaults.caretHtml);
+          element.html((selected ? selected : getPlaceHolder()) + defaults.caretHtml);
         };
 
         // Garbage collection
@@ -302,5 +322,4 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
 
       }
     };
-
   });
