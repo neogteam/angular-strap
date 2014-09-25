@@ -283,6 +283,11 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
           select.$updateActiveIndex();
           controller.$render();
         }, true);
+
+        // Observe placeholder
+        attr.$observe('placeholder', function() {
+          controller.$render();
+        });
         
         var getPlaceHolder = function () {
             try {
@@ -319,7 +324,6 @@ angular.module('mgcrea.ngStrap.select', ['mgcrea.ngStrap.tooltip', 'mgcrea.ngStr
           options = null;
           select = null;
         });
-
       }
     };
   });
