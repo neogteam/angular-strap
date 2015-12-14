@@ -291,6 +291,11 @@ angular.module('mgcrea.ngStrap.datepicker', ['mgcrea.ngStrap.helpers.dateParser'
             !isNaN(datepicker.$options[key]) && datepicker.$build(false);
           });
         });
+		
+        // Observe date format
+        angular.isDefined(attr.dateFormat) && attr.$observe('dateFormat', function(newValue) {
+          datepicker.$options.dateFormat = newValue;
+        });
 
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {
