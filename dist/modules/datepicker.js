@@ -1,6 +1,6 @@
 /**
  * angular-strap
- * @version v2.1.0 - 2015-01-28
+ * @version v2.1.0 - 2015-12-14
  * @link http://mgcrea.github.io/angular-strap
  * @author Olivier Louvignes (olivier@mg-crea.com)
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -297,6 +297,11 @@ angular.module('mgcrea.ngStrap.datepicker', ['mgcrea.ngStrap.helpers.dateParser'
             // Build only if dirty
             !isNaN(datepicker.$options[key]) && datepicker.$build(false);
           });
+        });
+		
+        // Observe date format
+        angular.isDefined(attr.dateFormat) && attr.$observe('dateFormat', function(newValue) {
+          datepicker.$options.dateFormat = newValue;
         });
 
         // Watch model for changes
